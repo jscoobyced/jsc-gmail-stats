@@ -1,7 +1,6 @@
 package io.narok.jscgs.plugins
 
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
-import io.ktor.http.ContentType
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
