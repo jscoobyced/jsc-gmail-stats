@@ -89,8 +89,9 @@ jobs:
           context: .
           file: etc/docker/Dockerfile
           platforms: linux/amd64,linux/arm64
-          args: APP_VERSION=${{ env.APP_VERSION }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          build-args: GIT_TAG=${{ github.ref_name }}
+          build-args: |
+            GIT_TAG=${{ github.ref_name }}
+            APP_VERSION=${{ env.APP_VERSION }}
