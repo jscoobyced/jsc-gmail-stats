@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>JSC Gmail Stats</title>
+    <style>
+        h1, main {
+            text-align: center;
+        }
+
+        main {
+            width: 50%;
+            margin: 0 auto;
+            text-align: left;
+        }
+
+        input, button {
+            border-radius: 5px;
+            padding: 5px 10px;
+        }
+
+        .row {
+            display: flex;
+            line-height: 2.5em;
+        }
+
+        .column {
+            flex: 50%;
+        }
+
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+<h1>JSC Gmail Stats</h1>
+<main>
+    You can count your sent emails here:
+    <div class="row">
+        <div class="column">
+            <label for="email">Enter your email address</label>
+        </div>
+        <div class="column">
+            <input type="text" id="email" name="email" size="30"/>
+        </div>
+    </div>
+    <div class="row">
+        <div class="column">
+            <label for="password">Enter your password</label>
+        </div>
+        <div class="column">
+            <input type="password" id="password" name="password" size="30"/>
+        </div>
+    </div>
+    <div class="row">
+        <div class="column">
+            <label for="date-from">Enter start date</label>
+        </div>
+        <div class="column">
+            <input type="date" id="date-from" name="date-from" size="10"/>
+        </div>
+    </div>
+    <div class="row">
+        <div class="column">
+            <label for="date-to">Enter end date</label>
+        </div>
+        <div class="column">
+            <input type="date" id="date-to" name="date-to" size="10"/>
+        </div>
+    </div>
+    <div class="row">
+        <div class="column">
+            <div class="error" id="error"></div>
+        </div>
+        <div class="column">
+            <button onclick="countEmails()">Count emails</button>
+        </div>
+    </div>
+    <div class="row">
+        <div class="column">
+            <div id="message"></div>
+        </div>
+    </div>
+</main>
+<script>
+    function getFormattedDate(id, label) {
+        const value = document.getElementById(id).value;
+        if (value.replaceAll(' ', '') === '' ) {
+            showError('Please enter a valid date for ' + label + '.');
+            return '';
+        }
+        const dateValue = new Date(value);
+        const offset = dateValue.getTimezoneOffset();
+        const formattedDate = ((new Date(dateValue.getTime() - (offset*60*1000)))
+            .toISOString()
+            .split('T')[0]);
+        return formattedDate;
+    }
+
+    function _showMessage(id, message) {
+        document.getElementById(id).innerHTML = message;
+    }
+
+    function showError(message) {
+        _showMessage('error', message);
+    }
+
+    function showMessage(message) {
+        _showMessage('message', message);
+    }
+
+    function processResponse(data) {
+        const result = data.result;
+        if (!result.success) {
+            switch(result.errorCode) {
+                case 1:
+                    showError("The requested label doesn't exist.");
+                    break;
+                case 2:
+                    showError('You need to login first.');
+                    break;
+                default:
+                    showError(result.message);
+            }
+            return;
+        }
+
+        const emailCount = data.emailCount.emailCount;
+        const dateFrom = data.emailCount.dateFrom;
+        const dateTo = data.emailCount.dateTo;
+        showMessage('You have ' + emailCount + ' emails between ' + dateFrom + ' and ' + dateTo + '.');
+    }
+
+    function countEmails() {
+        showError('');
+        let email = document.getElementById('email').value
+            .replaceAll('.','')
+            .replaceAll('_','')
+            .replaceAll('+','')
+            .replaceAll('@','')
+            .replaceAll('-','');
+        if (email === '') {
+            showError('Please enter an email.');
+            return;
+        }
+
+        let password = document.getElementById('password').value
+        if (password === '') {
+            showError('Please enter a password.');
+            return;
+        }
+
+        let dateFrom = getFormattedDate('date-from', 'Start Date');
+        if (dateFrom === '') return;
+        let dateTo = getFormattedDate('date-to', 'End Date');
+        if (dateTo === '') return;
+
+        const url = '/count';
+        const payload = {
+            email,
+            password,
+            dateFrom,
+            dateTo
+        }
+        fetch(url,
+            {
+                method: "POST",
+                headers: {
+                  'Accept': 'application/json',
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(data => {
+                processResponse(data);
+            }).catch(function (error) {
+                console.log(error);
+            });
+    }
+</script>
+</body>
+</html>

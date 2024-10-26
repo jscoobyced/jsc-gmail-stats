@@ -1,12 +1,14 @@
 package io.narok.jscgs.service
 
-import com.google.api.client.http.HttpTransport
+import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
 import com.google.api.client.json.JsonFactory
 import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.gmail.Gmail
 import com.google.api.services.gmail.model.ListMessagesResponse
+import io.narok.jscgs.exception.UserNotFoundException
 import io.narok.jscgs.models.EmailCount
 import io.narok.jscgs.models.EmailCountResponse
+import io.narok.jscgs.models.ErrorCode
 import io.narok.jscgs.models.Result
 
 private const val MESSAGE_PER_CALL = 25L
@@ -15,9 +17,15 @@ private const val APPLICATION_NAME = "JSC G Application"
 
 class GmailExtractor {
 
-    fun extract(httpTransport: HttpTransport, username: String, labelName: String, dateFrom: String, dateTo: String): EmailCountResponse {
+    private val httpTransport = GoogleNetHttpTransport.newTrustedTransport()
+
+    fun extract(username: String, labelName: String, dateFrom: String, dateTo: String): EmailCountResponse {
         val safeUserName = username.filter { it.isLetter() }
         val credential = Credentials.getToken(safeUserName, httpTransport)
+
+        if(credential === null) {
+            throw UserNotFoundException()
+        }
         val service = Gmail.Builder(httpTransport, JSON_FACTORY, credential)
             .setApplicationName(APPLICATION_NAME)
             .build()
@@ -40,10 +48,10 @@ class GmailExtractor {
 
             } while (pageToken != null)
         } else {
-            return EmailCountResponse(null, result = Result(false, "Label '$labelName' not found."))
+            return EmailCountResponse(null, result = Result(false, "Label '$labelName' not found.", ErrorCode.LABEL_NOT_FOUND))
         }
 
-        return EmailCountResponse(EmailCount(counter, dateFrom, dateTo), result = Result(true, null))
+        return EmailCountResponse(EmailCount(counter, dateFrom, dateTo), result = Result())
     }
 
     private fun getLabelIdByName(service: Gmail, userId: String, labelName: String): String? {

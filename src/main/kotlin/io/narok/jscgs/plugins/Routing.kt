@@ -2,8 +2,13 @@ package io.narok.jscgs.plugins
 
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
 import io.ktor.server.application.*
+import io.ktor.server.http.content.CompressedFileType
+import io.ktor.server.http.content.staticResources
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.narok.jscgs.exception.UserNotFoundException
+import io.narok.jscgs.models.EmailCountResponse
+import io.narok.jscgs.models.ErrorCode
 import io.narok.jscgs.models.RequestParameters
 import io.narok.jscgs.models.Result
 import io.narok.jscgs.service.Credentials
@@ -14,6 +19,15 @@ fun Application.configureRouting() {
 
 
     routing {
+
+        staticResources("/", "static"){
+            extensions("html", "htm")
+            default("index.html")
+            enableAutoHeadResponse()
+            preCompressed(CompressedFileType.GZIP)
+            exclude { url -> url.path.contains("excluded") }
+        }
+
         route("/login") {
             get {
                 val username = call.parameters[RequestParameters.USERNAME] ?: ""
@@ -27,7 +41,7 @@ fun Application.configureRouting() {
                 call.respond(
                     Result(
                         true,
-                        "Click <a href=\"$authorizationUrl\" target=\"_blank\">here</a> to authorize the application."
+                        authorizationUrl
                     )
                 )
             }
@@ -68,16 +82,18 @@ fun Application.configureRouting() {
                                 val dateFrom = call.parameters[RequestParameters.DATE_FROM] ?: "2200-01-01"
                                 val dateTo = call.parameters[RequestParameters.DATE_TO] ?: "2201-01-01"
 
-                                val httpTransport = GoogleNetHttpTransport.newTrustedTransport()
-
-                                val response = GmailExtractor().extract(
-                                    httpTransport,
-                                    safeUsername,
-                                    label,
-                                    RequestParameterFormatter.formatDate(dateFrom),
-                                    RequestParameterFormatter.formatDate(dateTo)
-                                )
-                                call.respond(response)
+                                try {
+                                    val response = GmailExtractor().extract(
+                                        safeUsername,
+                                        label,
+                                        RequestParameterFormatter.formatDate(dateFrom),
+                                        RequestParameterFormatter.formatDate(dateTo)
+                                    )
+                                    call.respond(response)
+                                } catch(exc: UserNotFoundException) {
+                                    call.respond(EmailCountResponse(null, Result(false,"User is not yet registered.",
+                                        ErrorCode.USER_NOT_REGISTERED)))
+                                }
                             }
                         }
 

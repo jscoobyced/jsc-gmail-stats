@@ -62,15 +62,19 @@ class Credentials {
         }
 
         fun getToken(username: String, httpTransport: HttpTransport): Credential? {
-            val inputStream = File(CREDENTIALS_FILE).inputStream()
-            val clientSecrets = GoogleClientSecrets.load(JSON_FACTORY, InputStreamReader(inputStream))
+            try {
+                val inputStream = File(CREDENTIALS_FILE).inputStream()
+                val clientSecrets = GoogleClientSecrets.load(JSON_FACTORY, InputStreamReader(inputStream))
 
-            val flow = GoogleAuthorizationCodeFlow.Builder(httpTransport, JSON_FACTORY, clientSecrets, _scopes)
-                .setDataStoreFactory(FileDataStoreFactory(File(getTokenDirectoryPath(username))))
-                .setAccessType("offline")
-                .build()
+                val flow = GoogleAuthorizationCodeFlow.Builder(httpTransport, JSON_FACTORY, clientSecrets, _scopes)
+                    .setDataStoreFactory(FileDataStoreFactory(File(getTokenDirectoryPath(username))))
+                    .setAccessType("offline")
+                    .build()
 
-            return flow.loadCredential("user")
+                return flow.loadCredential("user")
+            } catch (exc: Exception) {
+                return null
+            }
         }
     }
 }
