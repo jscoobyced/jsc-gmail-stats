@@ -110,6 +110,11 @@
         _showMessage('message', message);
     }
 
+    function clearMessages() {
+        showError('');
+        showMessage('');
+    }
+
     function processResponse(data) {
         const result = data.result;
         if (!result.success) {
@@ -133,7 +138,7 @@
     }
 
     function countEmails() {
-        showError('');
+        clearMessages();
         let email = document.getElementById('email').value
             .replaceAll('.','')
             .replaceAll('_','')
@@ -156,10 +161,13 @@
         let dateTo = getFormattedDate('date-to', 'End Date');
         if (dateTo === '') return;
 
+        const label = "SENT";
+
         const url = '/count';
         const payload = {
             email,
             password,
+            label,
             dateFrom,
             dateTo
         }
