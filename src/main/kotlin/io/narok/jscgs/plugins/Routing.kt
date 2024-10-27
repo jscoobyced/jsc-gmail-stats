@@ -10,8 +10,9 @@ import io.narok.jscgs.exception.UserNotFoundException
 import io.narok.jscgs.models.EmailCountRequest
 import io.narok.jscgs.models.EmailCountResponse
 import io.narok.jscgs.models.ErrorCode
-import io.narok.jscgs.models.RequestParameters
+import io.narok.jscgs.models.LoginRequest
 import io.narok.jscgs.models.Result
+import io.narok.jscgs.repository.UserRepository
 import io.narok.jscgs.service.Credentials
 import io.narok.jscgs.service.GmailExtractor
 import io.narok.jscgs.service.RequestParameterFormatter
@@ -31,11 +32,21 @@ fun Application.configureRouting() {
         }
 
         route("/login") {
-            get {
-                val username = call.parameters[RequestParameters.USERNAME] ?: ""
-                if (username.isBlank()) {
-                    call.respond(Result(false, "Username cannot be empty."))
-                    return@get
+            post<LoginRequest> { loginRequest ->
+                val username = loginRequest.email
+                val password = loginRequest.password
+                if (username.isBlank() || password.isBlank()) {
+                    call.respond(Result(false, "Username or password cannot be empty.", ErrorCode.MISSING_FIELD.value))
+                    return@post
+                }
+                try {
+                    if (!UserRepository.registerUser(username, password)) {
+                        call.respond(Result(false, "Cannot register user.", ErrorCode.CANNOT_CREATE_USER.value))
+                        return@post
+                    }
+                } catch (exc: Exception) {
+                    call.respond(Result(false, exc.message, ErrorCode.DATABASE_ERROR.value))
+                    return@post
                 }
 
                 val httpTransport = GoogleNetHttpTransport.newTrustedTransport()
@@ -51,21 +62,13 @@ fun Application.configureRouting() {
 
         route("/Callback") {
             get {
-                val username = call.parameters[RequestParameters.USERNAME] ?: ""
-                if (username.isBlank()) {
-                    call.respond(Result(false, "Username cannot be empty."))
-                    return@get
-                }
-
                 val code = call.request.queryParameters["code"] ?: ""
                 if (code.isBlank()) {
                     call.respond(Result(false, "Authorization code not found"))
                     return@get
                 }
-                val safeUsername = username.filter { it.isLetter() }
-
                 val httpTransport = GoogleNetHttpTransport.newTrustedTransport()
-                Credentials.createToken(safeUsername, code, httpTransport)
+                Credentials.createToken(code, httpTransport)
 
                 call.respond(Result(true, "Authorization successful! You can now use the Google API."))
             }
@@ -95,7 +98,7 @@ fun Application.configureRouting() {
                         EmailCountResponse(
                             null, Result(
                                 false, exc.message,
-                                ErrorCode.USER_NOT_REGISTERED
+                                ErrorCode.USER_NOT_REGISTERED.value
                             )
                         )
                     )
@@ -104,7 +107,7 @@ fun Application.configureRouting() {
                         EmailCountResponse(
                             null, Result(
                                 false, exc.message,
-                                ErrorCode.MISSING_FIELD
+                                ErrorCode.MISSING_FIELD.value
                             )
                         )
                     )

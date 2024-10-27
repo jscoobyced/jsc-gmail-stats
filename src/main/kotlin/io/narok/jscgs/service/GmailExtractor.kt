@@ -13,7 +13,7 @@ import io.narok.jscgs.models.Result
 
 private const val MESSAGE_PER_CALL = 25L
 private val JSON_FACTORY: JsonFactory = GsonFactory.getDefaultInstance()
-private const val APPLICATION_NAME = "JSC G Application"
+const val APPLICATION_NAME = "JSC G Application"
 
 class GmailExtractor {
 
@@ -26,8 +26,7 @@ class GmailExtractor {
         dateFrom: String,
         dateTo: String
     ): EmailCountResponse {
-        val safeUserName = username.filter { it.isLetter() }
-        val credential = Credentials.getToken(safeUserName, httpTransport)
+        val credential = Credentials.getToken(username, httpTransport)
 
         if (credential === null) {
             throw UserNotFoundException("User is not yet registered.")
@@ -69,7 +68,7 @@ class GmailExtractor {
         } else {
             return EmailCountResponse(
                 null,
-                result = Result(false, "Label '$labelName' not found.", ErrorCode.LABEL_NOT_FOUND)
+                result = Result(false, "Label '$labelName' not found.", ErrorCode.LABEL_NOT_FOUND.value)
             )
         }
 

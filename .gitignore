@@ -39,3 +39,4 @@ tokens/
 credentials.*
 01-secret.yaml
 /.kotlin/
+data
