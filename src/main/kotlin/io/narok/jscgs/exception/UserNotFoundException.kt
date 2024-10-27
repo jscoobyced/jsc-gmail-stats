@@ -1,4 +1,4 @@
 package io.narok.jscgs.exception
 
-class UserNotFoundException : Exception() {
+class UserNotFoundException(message: String) : Exception() {
 }

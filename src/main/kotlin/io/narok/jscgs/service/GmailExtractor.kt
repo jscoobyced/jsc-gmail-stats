@@ -19,13 +19,32 @@ class GmailExtractor {
 
     private val httpTransport = GoogleNetHttpTransport.newTrustedTransport()
 
-    fun extract(username: String, labelName: String, dateFrom: String, dateTo: String): EmailCountResponse {
+    fun extract(
+        username: String,
+        password: String,
+        labelName: String,
+        dateFrom: String,
+        dateTo: String
+    ): EmailCountResponse {
         val safeUserName = username.filter { it.isLetter() }
         val credential = Credentials.getToken(safeUserName, httpTransport)
 
-        if(credential === null) {
-            throw UserNotFoundException()
+        if (credential === null) {
+            throw UserNotFoundException("User is not yet registered.")
         }
+
+        if (username.isBlank()) {
+            throw IllegalArgumentException("Email is required.")
+        }
+
+        if (password.isBlank()) {
+            throw IllegalArgumentException("Password is required.")
+        }
+
+        if (dateFrom.isBlank() || dateTo.isBlank()) {
+            throw IllegalArgumentException("Please provide date period.")
+        }
+
         val service = Gmail.Builder(httpTransport, JSON_FACTORY, credential)
             .setApplicationName(APPLICATION_NAME)
             .build()
@@ -48,7 +67,10 @@ class GmailExtractor {
 
             } while (pageToken != null)
         } else {
-            return EmailCountResponse(null, result = Result(false, "Label '$labelName' not found.", ErrorCode.LABEL_NOT_FOUND))
+            return EmailCountResponse(
+                null,
+                result = Result(false, "Label '$labelName' not found.", ErrorCode.LABEL_NOT_FOUND)
+            )
         }
 
         return EmailCountResponse(EmailCount(counter, dateFrom, dateTo), result = Result())

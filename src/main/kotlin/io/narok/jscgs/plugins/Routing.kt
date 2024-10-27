@@ -4,7 +4,6 @@ import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
 import io.ktor.server.application.*
 import io.ktor.server.http.content.CompressedFileType
 import io.ktor.server.http.content.staticResources
-import io.ktor.server.request.receive
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.narok.jscgs.exception.UserNotFoundException
@@ -16,6 +15,7 @@ import io.narok.jscgs.models.Result
 import io.narok.jscgs.service.Credentials
 import io.narok.jscgs.service.GmailExtractor
 import io.narok.jscgs.service.RequestParameterFormatter
+import java.lang.IllegalArgumentException
 
 fun Application.configureRouting() {
 
@@ -84,6 +84,7 @@ fun Application.configureRouting() {
                 try {
                     val response = GmailExtractor().extract(
                         safeUsername,
+                        password,
                         label,
                         RequestParameterFormatter.formatDate(dateFrom),
                         RequestParameterFormatter.formatDate(dateTo)
@@ -93,8 +94,17 @@ fun Application.configureRouting() {
                     call.respond(
                         EmailCountResponse(
                             null, Result(
-                                false, "User is not yet registered.",
+                                false, exc.message,
                                 ErrorCode.USER_NOT_REGISTERED
+                            )
+                        )
+                    )
+                } catch (exc: IllegalArgumentException) {
+                    call.respond(
+                        EmailCountResponse(
+                            null, Result(
+                                false, exc.message,
+                                ErrorCode.MISSING_FIELD
                             )
                         )
                     )
