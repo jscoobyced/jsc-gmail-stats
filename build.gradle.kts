@@ -4,6 +4,7 @@ val google_api_client: String by project
 val google_oauth_client_jetty: String by project
 val google_api_gmail: String by project
 val h2_version: String by project
+val argon2_version: String by project
 
 plugins {
     kotlin("jvm") version "2.0.21"
@@ -37,6 +38,7 @@ dependencies {
     implementation("com.google.oauth-client:google-oauth-client-jetty:$google_oauth_client_jetty")
     implementation("com.google.apis:google-api-services-gmail:$google_api_gmail")
     implementation("com.h2database:h2:$h2_version")
+    implementation("de.mkammerer:argon2-jvm:$argon2_version")
 
     testImplementation("io.ktor:ktor-server-test-host-jvm")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")

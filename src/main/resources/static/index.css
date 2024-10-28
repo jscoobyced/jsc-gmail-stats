@@ -1,0 +1,27 @@
+h1, main {
+            text-align: center;
+        }
+
+        main {
+            width: 70%;
+            margin: 0 auto;
+            text-align: left;
+        }
+
+        input, button {
+            border-radius: 5px;
+            padding: 5px 10px;
+        }
+
+        .row {
+            display: flex;
+            line-height: 2.5em;
+        }
+
+        .column {
+            flex: 50%;
+        }
+
+        .error {
+            color: red;
+        }

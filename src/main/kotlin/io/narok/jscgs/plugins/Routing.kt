@@ -12,6 +12,8 @@ import io.narok.jscgs.models.EmailCountResponse
 import io.narok.jscgs.models.ErrorCode
 import io.narok.jscgs.models.LoginRequest
 import io.narok.jscgs.models.Result
+import io.narok.jscgs.models.UnregisterRequest
+import io.narok.jscgs.repository.UNVERIFIED
 import io.narok.jscgs.repository.UserRepository
 import io.narok.jscgs.service.Credentials
 import io.narok.jscgs.service.GmailExtractor
@@ -33,7 +35,7 @@ fun Application.configureRouting() {
 
         route("/login") {
             post<LoginRequest> { loginRequest ->
-                val username = loginRequest.email
+                val username = loginRequest.email.filter { it.isLetter() }
                 val password = loginRequest.password
                 if (username.isBlank() || password.isBlank()) {
                     call.respond(Result(false, "Username or password cannot be empty.", ErrorCode.MISSING_FIELD.value))
@@ -74,12 +76,49 @@ fun Application.configureRouting() {
             }
         }
 
+        route("/unregister") {
+            post<UnregisterRequest> { unregisterRequest ->
+                val username = unregisterRequest.email.filter { it.isLetter() }
+                if (UserRepository.unregisterUser(username)) {
+                    call.respond(Result(true))
+                } else {
+                    call.respond(Result(false, "User doesn't exist or can't be unregistered."))
+                }
+
+            }
+        }
+
         route("/count") {
 
             post<EmailCountRequest> { emailCountRequest ->
 
                 val safeUsername = emailCountRequest.email.filter { it.isLetter() }
                 val password = emailCountRequest.password
+                val user = UserRepository.verifyUser(safeUsername, password)
+                if (user == UNVERIFIED) {
+                    call.respond(
+                        EmailCountResponse(
+                            null, Result(
+                                false, "Invalid user or password.",
+                                ErrorCode.USER_NOT_REGISTERED.value
+                            )
+                        )
+                    )
+                    return@post
+                }
+
+                if (user.isBlank() || user != safeUsername) {
+                    call.respond(
+                        EmailCountResponse(
+                            null, Result(
+                                false, "User not registered.",
+                                ErrorCode.INCORRECT_PASSWORD.value
+                            )
+                        )
+                    )
+                    return@post
+                }
+
                 val label = emailCountRequest.label
                 val dateFrom = emailCountRequest.dateFrom
                 val dateTo = emailCountRequest.dateTo

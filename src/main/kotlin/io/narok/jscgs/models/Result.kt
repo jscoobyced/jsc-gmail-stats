@@ -11,5 +11,6 @@ enum class ErrorCode(val value: Int) {
     USER_NOT_REGISTERED(2),
     MISSING_FIELD(3),
     CANNOT_CREATE_USER(4),
-    DATABASE_ERROR(5)
+    DATABASE_ERROR(5),
+    INCORRECT_PASSWORD(6)
 }
