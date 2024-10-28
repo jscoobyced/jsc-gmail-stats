@@ -104,7 +104,7 @@ fun Application.configureRouting() {
                         EmailCountResponse(
                             null, Result(
                                 false, "Invalid user or password.",
-                                ErrorCode.USER_NOT_REGISTERED.value
+                                ErrorCode.INCORRECT_PASSWORD.value
                             )
                         )
                     )
@@ -116,7 +116,7 @@ fun Application.configureRouting() {
                         EmailCountResponse(
                             null, Result(
                                 false, "User not registered.",
-                                ErrorCode.INCORRECT_PASSWORD.value
+                                ErrorCode.USER_NOT_REGISTERED.value
                             )
                         )
                     )
