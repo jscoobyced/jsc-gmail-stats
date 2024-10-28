@@ -18,6 +18,8 @@ ENV JSC_CALLBACK_URL="http://localhost:8888/Callback"
 
 WORKDIR /app
 
+RUN set -x && apk update
+RUN set -x && apk add --upgrade --no-cache gcompat
 RUN mkdir jsc-gmail-stats
 COPY --from=builder /app/build/distributions/jsc-gmail-stats-$APP_VERSION /app/jsc-gmail-stats/
 
