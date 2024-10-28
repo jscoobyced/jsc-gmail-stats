@@ -1,6 +1,7 @@
 package io.narok.jscgs.plugins
 
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
+import io.ktor.http.ContentType
 import io.ktor.server.application.*
 import io.ktor.server.http.content.CompressedFileType
 import io.ktor.server.http.content.staticResources
@@ -72,7 +73,10 @@ fun Application.configureRouting() {
                 val httpTransport = GoogleNetHttpTransport.newTrustedTransport()
                 Credentials.createToken(code, httpTransport)
 
-                call.respond(Result(true, "Authorization successful! You can now use the Google API."))
+                call.respondText(
+                    "Authorization successful! You can close this tab and use the application.",
+                    ContentType.Text.Html
+                )
             }
         }
 
