@@ -13,7 +13,7 @@ plugins {
 }
 
 group = "io.narok"
-version = "0.1.4"
+version = "0.1.5"
 
 application {
     mainClass.set("io.ktor.server.netty.EngineMain")
