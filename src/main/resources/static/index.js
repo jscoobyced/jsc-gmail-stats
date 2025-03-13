@@ -118,7 +118,9 @@ function countEmails() {
     },
     body: JSON.stringify(payload),
   })
-    .then((response) => response.json())
+    .then((response) => {
+        if (response.status === 200) return response.json()
+        })
     .then((data) => {
       processCountResponse(data);
     })
@@ -220,3 +222,21 @@ function unregister() {
       console.log(error);
     });
 }
+
+function getDateRange() {
+    const today = new Date();
+    let prevMonth = new Date(today.getFullYear(), today.getMonth() - 1, 21);
+    let currMonth = new Date(today.getFullYear(), today.getMonth(), 20);
+    const formatDate = (date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
+    return [formatDate(prevMonth), formatDate(currMonth)];
+}
+
+const dates = getDateRange();
+document.getElementById('date-from').value = dates[0];
+document.getElementById('date-to').value = dates[1];

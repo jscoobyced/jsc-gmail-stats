@@ -148,10 +148,17 @@ fun Application.configureRouting() {
                 } catch (exc: IllegalArgumentException) {
                     call.respond(
                         EmailCountResponse(
-                            null, Result(
-                                false, exc.message,
-                                ErrorCode.MISSING_FIELD.value
+                            null,
+                            Result(
+                                false, exc.message, ErrorCode.MISSING_FIELD.value
                             )
+                        )
+                    )
+                } catch (exc: Exception) {
+                    call.respond(
+                        EmailCountResponse(
+                            null,
+                            Result(false, "Unauthorized. Please unregister then re-register.", ErrorCode.UNAUTHORIZED.value)
                         )
                     )
                 }
