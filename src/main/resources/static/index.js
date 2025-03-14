@@ -57,17 +57,26 @@ function processCountResponse(data) {
     return;
   }
 
-  const emailCount = data.emailCount.emailCount;
+  const emailCount = +data.emailCount.emailCount;
   const dateFrom = data.emailCount.dateFrom;
   const dateTo = data.emailCount.dateTo;
+  const message1 = "You have " +
+                         emailCount +
+                         " emails between " +
+                         dateFrom +
+                         " and " +
+                         dateTo +
+                         "."
+  const dateNow = new Date()
+  const diffDays = parseInt((new Date(dateTo).getTime() - dateNow.getTime()) / 86400000)
+  const diffWeeks = Math.floor(diffDays / 7)
+  const remainingDays = diffDays - (diffWeeks * 7)
+  const businessDays = (diffWeeks * 5) + remainingDays
+  const kpi = +document.getElementById('kpi').value
+  const perDay = Math.ceil((kpi - emailCount) / diffDays)
+  const message2 = "You need to do " + perDay + " emails in the next " + businessDays + " working days."
   showMessage(
-    "You have " +
-      emailCount +
-      " emails between " +
-      dateFrom +
-      " and " +
-      dateTo +
-      "."
+    message1 + "<br/>" + message2
   );
 }
 
