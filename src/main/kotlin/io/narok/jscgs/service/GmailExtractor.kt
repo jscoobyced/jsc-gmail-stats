@@ -10,6 +10,10 @@ import io.narok.jscgs.models.EmailCount
 import io.narok.jscgs.models.EmailCountResponse
 import io.narok.jscgs.models.ErrorCode
 import io.narok.jscgs.models.Result
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 
 private const val MESSAGE_PER_CALL = 25L
 private val JSON_FACTORY: JsonFactory = GsonFactory.getDefaultInstance()
@@ -94,10 +98,20 @@ class GmailExtractor {
         dateTo: String,
         pageToken: String? = null
     ): ListMessagesResponse? {
+        val formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd")
+        val zoneId = ZoneId.of("Asia/Bangkok")
+        val zonedDateTime = ZonedDateTime.now(zoneId)
+        val zoneOffset = zonedDateTime.offset
+        val localDateFrom = LocalDate.parse(dateFrom, formatter)
+        val instantFrom = localDateFrom.atStartOfDay().toInstant(zoneOffset)
+        val dateFromSecond = instantFrom.epochSecond
+        val localDateTo = LocalDate.parse(dateTo, formatter)
+        val instantTo = localDateTo.atStartOfDay().toInstant(zoneOffset)
+        val dateToSecond = instantTo.epochSecond
         val request = service.users().messages().list(userId).apply {
             labelIds = listOf(labelId)
             maxResults = MESSAGE_PER_CALL
-            q = "after:$dateFrom before:$dateTo"
+            q = "after:$dateFromSecond before:$dateToSecond"
         }
         if (pageToken != null) {
             request.pageToken = pageToken
